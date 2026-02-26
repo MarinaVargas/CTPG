@@ -1,0 +1,221 @@
+import numpy as np
+
+print("="*50)
+print("PROJETO DE MATRIZES - CIFRA DE HILL")
+print("Grupo 01 - Ana Clara e Bruno")
+print("="*50)
+
+# ============================================================
+# CÉLULA 2: Funções de conversão texto ↔ números
+# ============================================================
+
+def texto_para_numeros(texto):
+    """
+    Converte uma string para lista de números (A=0, B=1, ..., Z=25).
+    Ignora caracteres que não são letras maiúsculas ou minúsculas.
+    """
+    texto = texto.upper()          # tudo maiúsculo
+    numeros = []
+    for char in texto:
+        if 'A' <= char <= 'Z':
+            numeros.append(ord(char) - ord('A'))
+        # Se quiser incluir espaço, pode mapear para 26, mas manteremos só letras.
+    return numeros
+
+def numeros_para_texto(numeros):
+    """
+    Converte lista de números (0-25) de volta para string.
+    """
+    texto = ''
+    for num in numeros:
+        texto += chr(num + ord('A'))
+    return texto
+
+# Teste rápido
+print("\n[TESTE CONVERSÃO]")
+teste = texto_para_numeros("FIM")
+print(f"'FIM' -> números: {teste}")
+print(f"{teste} -> texto: {numeros_para_texto(teste)}")
+
+# ============================================================
+# CÉLULA 3: Função para agrupar em vetores (pares)
+# ============================================================
+
+def criar_vetores(lista, tamanho=2):
+    """
+    Agrupa a lista em vetores de tamanho fixo (pares).
+    Se o número de elementos não for múltiplo do tamanho, completa com zeros.
+    """
+    lista = lista.copy()
+    while len(lista) % tamanho != 0:
+        lista.append(0)           # completa com zero (letra A)
+    vetores = []
+    for i in range(0, len(lista), tamanho):
+        vetores.append(lista[i:i+tamanho])
+    return np.array(vetores)
+
+# ============================================================
+# CÉLULA 4: Definição da matriz chave e cálculo da inversa módulo 26
+# ============================================================
+
+# Matriz chave (deve ser inversível mod 26)
+K = np.array([[2, 3],
+              [1, 4]], dtype=int)
+
+print("\n[MATRIZ CHAVE]")
+print("K =\n", K)
+
+# Função para encontrar o inverso de um número módulo m
+def mod_inv(a, m):
+    for x in range(1, m):
+        if (a * x) % m == 1:
+            return x
+    return None
+
+# Calcular determinante
+det = int(round(np.linalg.det(K)))  # = 5
+print(f"\nDeterminante de K: {det}")
+inv_det = mod_inv(det % 26, 26)
+if inv_det is None:
+    print("ERRO: a matriz não é inversível módulo 26.")
+else:
+    print(f"Inverso de {det} módulo 26: {inv_det}")
+
+    # Matriz adjunta (cofatores) módulo 26
+    adj = np.array([[K[1,1], -K[0,1]],
+                    [-K[1,0], K[0,0]]], dtype=int)
+    adj_mod = adj % 26
+    print("\nMatriz adjunta (módulo 26):\n", adj_mod)
+
+    # Inversa = inv_det * adj_mod (módulo 26)
+    K_inv = (inv_det * adj_mod) % 26
+    print("\nMatriz inversa de K (módulo 26):\n", K_inv)
+
+    # Verificação
+    ident = np.dot(K, K_inv) % 26
+    print("\nVerificação (K * K_inv) mod 26:\n", ident)
+    if np.array_equal(ident, np.eye(2, dtype=int)):
+        print("✅ OK: K * K_inv = identidade.")
+    else:
+        print("❌ ERRO: a inversa não está correta.")
+
+# ============================================================
+# CÉLULA 5: Funções para cifrar e decifrar
+# ============================================================
+
+def cifrar(vetores, matriz):
+    """
+    Aplica a matriz a cada vetor (considerando vetores como colunas).
+    Retorna os vetores cifrados (como linhas).
+    """
+    cifrados = []
+    for v in vetores:
+        # Multiplica matriz (2x2) por vetor (2,)
+        res = np.dot(matriz, v) % 26
+        cifrados.append(res)
+    return np.array(cifrados)
+
+def decifrar(vetores_cif, matriz_inv):
+    """
+    Aplica a matriz inversa para recuperar os vetores originais.
+    """
+    decifrados = []
+    for v in vetores_cif:
+        res = np.dot(matriz_inv, v) % 26
+        decifrados.append(res)
+    return np.array(decifrados)
+
+# ============================================================
+# CÉLULA 6: Exemplo completo com a palavra "FIM"
+# ============================================================
+
+print("\n" + "="*50)
+print("EXEMPLO COMPLETO")
+print("="*50)
+
+mensagem = "FIM"
+print(f"Mensagem original: {mensagem}")
+
+# Converter para números
+nums = texto_para_numeros(mensagem)
+print(f"Números: {nums}")
+
+# Criar vetores (pares)
+vetores = criar_vetores(nums, tamanho=2)
+print(f"Vetores formados:\n{vetores}")
+
+# Cifrar
+vet_cif = cifrar(vetores, K)
+print(f"Vetores cifrados (números):\n{vet_cif}")
+
+# Achatar para lista e mostrar como letras
+nums_cif = vet_cif.flatten().tolist()
+msg_cif = numeros_para_texto(nums_cif)
+print(f"Mensagem cifrada: {msg_cif}")
+
+# Decifrar
+vet_dec = decifrar(vet_cif, K_inv)
+print(f"Vetores decifrados:\n{vet_dec}")
+
+# Recuperar texto (ignorando zeros extras)
+nums_dec = vet_dec.flatten().tolist()
+# Pegamos apenas os primeiros len(mensagem) números
+msg_rec = numeros_para_texto(nums_dec[:len(mensagem)])
+print(f"Mensagem decifrada (original): {msg_rec}")
+
+if msg_rec == mensagem:
+    print("✅ Sucesso: a mensagem foi recuperada.")
+else:
+    print("❌ Falha na recuperação.")
+
+# ============================================================
+# CÉLULA 7: Modo exploratório (usuário digita a frase)
+# ============================================================
+
+print("\n" + "="*50)
+print("MODO EXPLORATÓRIO")
+print("="*50)
+
+frase = input("Digite uma frase (apenas letras, sem acentos): ")
+
+if frase.strip() == "":
+    print("Nenhuma frase digitada. Usando 'TESTE' como exemplo.")
+    frase = "TESTE"
+
+# Processar
+nums_frase = texto_para_numeros(frase)
+vet_frase = criar_vetores(nums_frase, tamanho=2)
+vet_cif_frase = cifrar(vet_frase, K)
+vet_dec_frase = decifrar(vet_cif_frase, K_inv)
+
+# Mostrar resultados
+print(f"\nFrase original: {frase}")
+print(f"Números: {nums_frase}")
+print(f"Vetores formados:\n{vet_frase}")
+
+nums_cif_frase = vet_cif_frase.flatten().tolist()
+msg_cif_frase = numeros_para_texto(nums_cif_frase)
+print(f"Mensagem cifrada: {msg_cif_frase}")
+
+nums_dec_frase = vet_dec_frase.flatten().tolist()
+# Truncar ao tamanho original
+msg_rec_frase = numeros_para_texto(nums_dec_frase[:len(frase)])
+print(f"Mensagem decifrada: {msg_rec_frase}")
+
+if msg_rec_frase == frase.upper():
+    print("✅ Sucesso! A frase foi recuperada corretamente.")
+else:
+    print("❌ Algo deu errado.")
+
+# ============================================================
+# CÉLULA 8: Considerações finais
+# ============================================================
+print("\n" + "="*50)
+print("FIM DO PROGRAMA")
+print("="*50)
+print("Este programa demonstra a Cifra de Hill:")
+print("- Conversão texto ↔ números (A=0,...,Z=25)")
+print("- Agrupamento em pares")
+print("- Cifragem com matriz chave K = [[2,3],[1,4]]")
+print("- Decifragem com a inversa módulo 26")
+print("- Exemplo completo e modo exploratório")
