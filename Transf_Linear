@@ -1,0 +1,246 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("Projeto de Transformações Lineares com Matrizes")
+print("Grupo: ___  |  Integrantes: ___ e ___")
+
+# --- CÉLULA 2: Função para aplicar transformação ---
+
+def aplicar_transformacao(pontos, matriz):
+    """
+    Aplica uma matriz de transformação a todos os pontos de uma figura.
+
+    Argumentos:
+        pontos: array com shape (n, 2) onde cada linha é um ponto (x,y)
+        matriz: array 2x2 com a transformação
+
+    Retorna:
+        novos_pontos: array com shape (n, 2) dos pontos transformados
+    """
+    # Multiplica cada ponto (linha) pela matriz
+    # Para cada ponto [x,y], fazemos [x',y'] = [x,y] * matriz.T
+    return np.dot(pontos, matriz.T)
+
+# --- CÉLULA 3: Definir a figura inicial (triângulo) ---
+
+# Pontos do triângulo: base esquerda, base direita, topo, e volta ao início para fechar
+triangulo = np.array([
+    [0, 0],     # vértice inferior esquerdo
+    [2, 0],     # vértice inferior direito
+    [1, 1.5],   # vértice superior
+    [0, 0]      # volta ao início para fechar o desenho
+])
+
+print("Figura inicial definida: triângulo com vértices:")
+print(triangulo[:-1])  # ignora o último que é repetição
+
+# --- CÉLULA 4: Definir as matrizes de transformação ---
+
+# 1. Matriz de rotação de 45 graus (sentido anti-horário)
+angulo = np.radians(45)  # converte 45° para radianos
+rotacao_45 = np.array([
+    [np.cos(angulo), -np.sin(angulo)],
+    [np.sin(angulo), np.cos(angulo)]
+])
+
+# 2. Matriz de escala (esticar na horizontal, comprimir na vertical)
+escala = np.array([
+    [2, 0],
+    [0, 0.5]
+])
+
+# 3. Matriz de cisalhamento horizontal
+cisalhamento = np.array([
+    [1, 0.8],
+    [0, 1]
+])
+
+# 4. Matriz de reflexão no eixo x
+reflexao_x = np.array([
+    [1, 0],
+    [0, -1]
+])
+
+print("\nMatrizes definidas:")
+print("Rotação 45°:\n", rotacao_45)
+print("Escala (2x, 0.5y):\n", escala)
+print("Cisalhamento (k=0.8):\n", cisalhamento)
+print("Reflexão no eixo x:\n", reflexao_x)
+
+# --- CÉLULA 5: Visualizar a figura original ---
+
+plt.figure(figsize=(6,6))
+plt.plot(triangulo[:,0], triangulo[:,1], 'b-', linewidth=2, label='Original')
+plt.plot(triangulo[:,0], triangulo[:,1], 'bo', markersize=8)  # marca os vértices
+plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+plt.axvline(x=0, color='k', linestyle='-', alpha=0.3)
+plt.grid(True, alpha=0.3)
+plt.axis('equal')
+plt.xlim(-3, 3)
+plt.ylim(-3, 3)
+plt.title('Figura Original - Triângulo')
+plt.legend()
+plt.show()
+
+# --- CÉLULA 6: Aplicar e visualizar cada transformação individualmente ---
+
+# Aplicar cada transformação
+tri_rot = aplicar_transformacao(triangulo, rotacao_45)
+tri_esc = aplicar_transformacao(triangulo, escala)
+tri_cis = aplicar_transformacao(triangulo, cisalhamento)
+tri_ref = aplicar_transformacao(triangulo, reflexao_x)
+
+# Criar uma figura com 2x2 subplots
+fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+
+# Original em todos para comparação (linha tracejada)
+# Rotação
+axs[0,0].plot(triangulo[:,0], triangulo[:,1], 'b--', alpha=0.5, label='Original')
+axs[0,0].plot(tri_rot[:,0], tri_rot[:,1], 'r-', linewidth=2, label='Rotação 45°')
+axs[0,0].set_title('Rotação de 45°')
+axs[0,0].legend()
+axs[0,0].grid(True, alpha=0.3)
+axs[0,0].axis('equal')
+
+# Escala
+axs[0,1].plot(triangulo[:,0], triangulo[:,1], 'b--', alpha=0.5, label='Original')
+axs[0,1].plot(tri_esc[:,0], tri_esc[:,1], 'g-', linewidth=2, label='Escala (2, 0.5)')
+axs[0,1].set_title('Escala')
+axs[0,1].legend()
+axs[0,1].grid(True, alpha=0.3)
+axs[0,1].axis('equal')
+
+# Cisalhamento
+axs[1,0].plot(triangulo[:,0], triangulo[:,1], 'b--', alpha=0.5, label='Original')
+axs[1,0].plot(tri_cis[:,0], tri_cis[:,1], 'm-', linewidth=2, label='Cisalhamento')
+axs[1,0].set_title('Cisalhamento Horizontal')
+axs[1,0].legend()
+axs[1,0].grid(True, alpha=0.3)
+axs[1,0].axis('equal')
+
+# Reflexão
+axs[1,1].plot(triangulo[:,0], triangulo[:,1], 'b--', alpha=0.5, label='Original')
+axs[1,1].plot(tri_ref[:,0], tri_ref[:,1], 'c-', linewidth=2, label='Reflexão eixo x')
+axs[1,1].set_title('Reflexão no Eixo X')
+axs[1,1].legend()
+axs[1,1].grid(True, alpha=0.3)
+axs[1,1].axis('equal')
+
+# Ajustar limites para melhor visualização
+for ax in axs.flat:
+    ax.set_xlim(-3, 3)
+    ax.set_ylim(-3, 3)
+    ax.axhline(y=0, color='k', linestyle='-', alpha=0.2)
+    ax.axvline(x=0, color='k', linestyle='-', alpha=0.2)
+
+plt.tight_layout()
+plt.show()
+
+# --- CÉLULA 7: Composição de transformações ---
+
+print("=== COMPOSIÇÃO DE TRANSFORMAÇÕES ===\n")
+
+# Exemplo: primeiro rotacionar 45°, depois aplicar escala
+print("1. Primeiro rotacionamos 45°")
+print("2. Depois aplicamos escala (2x, 0.5y)")
+
+# A ordem importa: primeiro aplica rotação, depois escala
+# A matriz composta é escala * rotacao (a da direita aplica primeiro)
+composta = np.dot(escala, rotacao_45)
+print("\nMatriz composta (escala × rotação):")
+print(composta)
+
+# Aplicar ao triângulo
+tri_comp = aplicar_transformacao(triangulo, composta)
+
+# Visualizar
+plt.figure(figsize=(8,8))
+plt.plot(triangulo[:,0], triangulo[:,1], 'b--', linewidth=2, alpha=0.5, label='Original')
+plt.plot(tri_rot[:,0], tri_rot[:,1], 'r--', linewidth=1.5, alpha=0.5, label='Só rotação')
+plt.plot(tri_esc[:,0], tri_esc[:,1], 'g--', linewidth=1.5, alpha=0.5, label='Só escala')
+plt.plot(tri_comp[:,0], tri_comp[:,1], 'm-', linewidth=3, label='Rotação + Escala')
+plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+plt.axvline(x=0, color='k', linestyle='-', alpha=0.3)
+plt.grid(True, alpha=0.3)
+plt.axis('equal')
+plt.xlim(-3, 3)
+plt.ylim(-3, 3)
+plt.title('Composição: Rotação 45° seguida de Escala')
+plt.legend()
+plt.show()
+
+print("Observe que o triângulo final (roxo) está rotacionado e depois esticado.")
+
+# --- CÉLULA 8: Momento de exploração livre ---
+
+print("\n=== MODO EXPLORATÓRIO ===")
+print("Escolha uma transformação para aplicar ao triângulo:")
+print("1 - Rotação de 60°")
+print("2 - Rotação de 90°")
+print("3 - Escala (1.5 na horizontal, 0.8 na vertical)")
+print("4 - Cisalhamento com fator 1.2")
+print("5 - Reflexão no eixo y")
+print("6 - Composição: rotação 30° + escala (2,2)")
+
+opcao = input("\nDigite o número da transformação desejada: ")
+
+# Definir a matriz conforme a escolha
+if opcao == '1':
+    ang = np.radians(60)
+    M = np.array([[np.cos(ang), -np.sin(ang)],
+                  [np.sin(ang), np.cos(ang)]])
+    nome = 'Rotação 60°'
+elif opcao == '2':
+    M = np.array([[0, -1], [1, 0]])  # rotação 90°
+    nome = 'Rotação 90°'
+elif opcao == '3':
+    M = np.array([[1.5, 0], [0, 0.8]])
+    nome = 'Escala (1.5, 0.8)'
+elif opcao == '4':
+    M = np.array([[1, 1.2], [0, 1]])
+    nome = 'Cisalhamento k=1.2'
+elif opcao == '5':
+    M = np.array([[-1, 0], [0, 1]])  # reflexão eixo y
+    nome = 'Reflexão no eixo y'
+elif opcao == '6':
+    # composição: rotação 30° + escala uniforme 2x
+    ang = np.radians(30)
+    R = np.array([[np.cos(ang), -np.sin(ang)],
+                  [np.sin(ang), np.cos(ang)]])
+    S = np.array([[2, 0], [0, 2]])
+    M = np.dot(S, R)
+    nome = 'Rotação 30° + Escala 2x'
+else:
+    print("Opção inválida! Usando identidade (sem transformação).")
+    M = np.eye(2)
+    nome = 'Identidade'
+
+# Aplicar a transformação escolhida
+tri_escolhido = aplicar_transformacao(triangulo, M)
+
+# Visualizar
+plt.figure(figsize=(8,8))
+plt.plot(triangulo[:,0], triangulo[:,1], 'b--', linewidth=2, alpha=0.7, label='Original')
+plt.plot(tri_escolhido[:,0], tri_escolhido[:,1], 'r-', linewidth=3, label=nome)
+plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+plt.axvline(x=0, color='k', linestyle='-', alpha=0.3)
+plt.grid(True, alpha=0.3)
+plt.axis('equal')
+plt.xlim(-4, 4)
+plt.ylim(-4, 4)
+plt.title(f'Transformação escolhida: {nome}')
+plt.legend()
+plt.show()
+
+print("\nFim do programa! Experimente rodar novamente e escolher outras opções.")
+
+# --- CÉLULA 9: Informações extras (opcional) ---
+
+print("\n=== RESUMO DO QUE APRENDEMOS ===")
+print("✓ Matrizes podem representar transformações geométricas")
+print("✓ Multiplicar matriz por vetor transforma cada ponto")
+print("✓ Rotação: usa seno e cosseno do ângulo")
+print("✓ Escala: multiplica as coordenadas por fatores")
+print("✓ Cisalhamento: desloca pontos proporcionalmente à outra coordenada")
+print("✓ Reflexão: inverte o sinal de uma coordenada")
+print("✓ Composição: multiplicar matrizes combina transformações")
